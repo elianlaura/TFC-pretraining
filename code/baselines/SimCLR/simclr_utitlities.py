@@ -285,9 +285,13 @@ def evaluate_model_simple(pred, truth, is_one_hot=True, return_dict=True):
         truth_argmax = truth
         pred_argmax = pred
 
+    print("pred:",np.unique(pred))
+    print("pred_argmax: ", pred_argmax)
+    print("truth_argmax: ", truth_argmax)
+
     test_cm = sklearn.metrics.confusion_matrix(truth_argmax, pred_argmax)
-    test_auroc = sklearn.metrics.roc_auc_score(truth, pred, multi_class='ovr')
-    test_auprc = sklearn.metrics.average_precision_score(truth, pred)
+    test_auroc = sklearn.metrics.roc_auc_score(truth_argmax, pred, multi_class='ovr')
+    #test_auprc = sklearn.metrics.average_precision_score(truth_argmax, pred_argmax)
     test_acc = sklearn.metrics.accuracy_score(truth_argmax, pred_argmax)
     test_f1 = sklearn.metrics.f1_score(truth_argmax, pred_argmax, average='macro')
     test_precision = sklearn.metrics.precision_score(truth_argmax, pred_argmax, average='macro')
@@ -300,9 +304,9 @@ def evaluate_model_simple(pred, truth, is_one_hot=True, return_dict=True):
     if return_dict:
         return {
             'Accuracy': test_acc,
-            'AUROC': test_auroc,
-            'AUPRC': test_auprc,
-            'Confusion Matrix': test_cm, 
+            'AUROC': test_auroc, #test_auroc,
+            'AUPRC': None, #test_auprc,
+            'Confusion Matrix': test_cm,
             'F1 Macro': test_f1, 
             'F1 Micro': test_f1_micro, 
             'F1 Weighted': test_f1_weighted, 

@@ -186,7 +186,9 @@ def create_full_classification_model_from_base_model(base_model, output_shape, m
     x = tf.keras.layers.Dense(output_shape)(x)
     outputs = tf.keras.layers.Softmax()(x)
 
-    model = tf.keras.Model(inputs=base_model.inputs, outputs=outputs, name=model_name)
+    inputs = tf.keras.Input(shape=(100, 6), name='input')
+    print("inputs:", inputs)
+    model = tf.keras.Model(inputs=inputs, outputs=outputs, name=model_name)
 
     for layer in model.layers:
         layer.trainable = False

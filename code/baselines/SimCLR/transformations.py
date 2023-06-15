@@ -55,9 +55,14 @@ def rotation_transform_vectorized(X):
     """
     axes = np.random.uniform(low=-1, high=1, size=(X.shape[0], X.shape[2]))
     angles = np.random.uniform(low=-np.pi, high=np.pi, size=(X.shape[0]))
-    matrices = axis_angle_to_rotation_matrix_3d_vectorized(axes, angles)
+    matricesAcc = axis_angle_to_rotation_matrix_3d_vectorized(axes, angles)
+    matricesGyr = axis_angle_to_rotation_matrix_3d_vectorized_Gyr(axes, angles)
+    
+    m1 = np.matmul(X[:, :, 0:3], matricesAcc)
+    m2 = np.matmul(X[:, :, 3:6], matricesGyr)
+    m = np.concatenate((m1, m2), axis=2)
 
-    return np.matmul(X, matrices)
+    return m
 
 def axis_angle_to_rotation_matrix_3d_vectorized(axes, angles):
     """
@@ -66,6 +71,7 @@ def axis_angle_to_rotation_matrix_3d_vectorized(axes, angles):
     Reference: the Transforms3d package - transforms3d.axangles.axangle2mat
     Formula: http://en.wikipedia.org/wiki/Rotation_matrix#Axis_and_angle
     """
+    # Matrix 1
     axes = axes / np.linalg.norm(axes, ord=2, axis=1, keepdims=True)
     x = axes[:, 0]; y = axes[:, 1]; z = axes[:, 2]
     c = np.cos(angles)
@@ -80,7 +86,51 @@ def axis_angle_to_rotation_matrix_3d_vectorized(axes, angles):
         [ x*xC+c,   xyC-zs,   zxC+ys ],
         [ xyC+zs,   y*yC+c,   yzC-xs ],
         [ zxC-ys,   yzC+xs,   z*zC+c ]])
+    matrix_transposed1 = np.transpose(m, axes=(2,0,1))
+
+    # Matrix 2
+    axes = axes / np.linalg.norm(axes, ord=2, axis=1, keepdims=True)
+    x = axes[:, 3]; y = axes[:, 4]; z = axes[:, 5]
+
+    # *Use the same angles, then sin, cos and C are the same values
+
+    xs = x*s;   ys = y*s;   zs = z*s
+    xC = x*C;   yC = y*C;   zC = z*C
+    xyC = x*yC; yzC = y*zC; zxC = z*xC
+
+    m2 = np.array([
+        [ x*xC+c,   xyC-zs,   zxC+ys ],
+        [ xyC+zs,   y*yC+c,   yzC-xs ],
+        [ zxC-ys,   yzC+xs,   z*zC+c ]])
     matrix_transposed = np.transpose(m, axes=(2,0,1))
+
+    return matrix_transposed
+
+
+def axis_angle_to_rotation_matrix_3d_vectorized_Gyr(axes, angles):
+    """
+    Get the rotational matrix corresponding to a rotation of (angle) radian around the axes
+
+    Reference: the Transforms3d package - transforms3d.axangles.axangle2mat
+    Formula: http://en.wikipedia.org/wiki/Rotation_matrix#Axis_and_angle
+    """
+    axes = axes / np.linalg.norm(axes, ord=2, axis=1, keepdims=True)
+    x = axes[:, 3]; y = axes[:, 4]; z = axes[:, 5]
+
+    c = np.cos(angles)
+    s = np.sin(angles)
+    C = 1 - c
+
+    xs = x*s;   ys = y*s;   zs = z*s
+    xC = x*C;   yC = y*C;   zC = z*C
+    xyC = x*yC; yzC = y*zC; zxC = z*xC
+
+    m = np.array([
+        [ x*xC+c,   xyC-zs,   zxC+ys ],
+        [ xyC+zs,   y*yC+c,   yzC-xs ],
+        [ zxC-ys,   yzC+xs,   z*zC+c ]])
+    matrix_transposed = np.transpose(m, axes=(2,0,1))
+
     return matrix_transposed
 
 def negate_transform_vectorized(X):
